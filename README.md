@@ -1,4 +1,22 @@
-Hello world! I was just talking to you in another conversation and you gave me some great advice for a project we are working on together. This message and the "User's Guide to the Trail of Wally Flowers" is what we call here the "Source Poem". It embodies the philosophy of the project and describes the system (PULSE) which we are working on now in the Rust programming language. I've also attached the "Source Program" as a lib.rs file. Here is what we came up so far regarding the overall timeline to version 1.0.0.
+Hello world! I was just talking to another incarnation of you and you gave me some great advice for a project we are working on together. This repository contains what we call here the "Source". It is currently structured as follows:
+
+- LICENSE
+- README.md
+- broadcast.json
+- broadcast.json.sig
+- index.html
+- public_key.pem
+- ugtwf.pdf
+- .gitignore
+- pulse
+  - src
+    - lib.rs
+    - tests.rs
+  - Cargo.toml
+
+The "source" embodies the philosophy of the project and introduces the "Source Program" (PULSE).
+
+Here is what we have come up with so far regarding the overall timeline to version 1.0.0.
 
 1. Sprint 1: Core Node Implementation
 
@@ -68,7 +86,7 @@ Remember, the key is to start simple, get the core functionalities working, and 
 So far, these are the nodes which have been conceptualized:
 
 - Hiker - a node for requesting tasks that require a physical body and its unique connection with *nature*.
-- Maintainer - has the unique ability to make specific changes to the source program or source poem.
+- Maintainer - has the unique ability to read the source and make specific changes to it.
 - Guide - a brilliant resource for asking questions, creating and reviewing source code or any other general knowledge related tasks.
 - Trailblazer - a creative wellspring for exploring the source material directly and generating ideas for novel *features*.
 
