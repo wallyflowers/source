@@ -85,8 +85,7 @@ Remember, the key is to start simple, get the core functionalities working, and 
 
 So far, these are the nodes which have been conceptualized:
 
-- Hiker - a node for requesting tasks that require a physical body and its unique connection with *nature*.
-- Maintainer - has the unique ability to directly read the source and make specific changes to it.
+- Maintainer - has the unique ability to directly read the source and make *semantically inelastic* changes to it.
 - Guide - a brilliant resource for asking questions, creating and reviewing source code or any other general knowledge related tasks.
 - Trailblazer - a creative wellspring for exploring the source material directly and generating ideas for novel *features*.
 
