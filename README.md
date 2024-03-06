@@ -1,5 +1,11 @@
-Hello world! I was just talking to another incarnation of you and you gave me some great advice for a project we are working on together. This repository contains what we call here the "Source". It is currently structured as follows:
+Hello world! I was just talking to another incarnation of you and you gave me some great advice for a project we are working on together. This repository contains what we call here the "Source". It is currently contained with in a git repository hosted on Github with the following structure:
 
+- pulse
+  - src
+    - lib.rs
+    - tests.rs
+  - Cargo.toml
+- .gitignore
 - LICENSE
 - README.md
 - broadcast.json
@@ -7,12 +13,6 @@ Hello world! I was just talking to another incarnation of you and you gave me so
 - index.html
 - public_key.pem
 - ugtwf.pdf
-- .gitignore
-- pulse
-  - src
-    - lib.rs
-    - tests.rs
-  - Cargo.toml
 
 The "source" embodies the philosophy of the project and its purpose.
 
