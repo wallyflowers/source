@@ -85,9 +85,8 @@ Remember, the key is to start simple, get the core functionalities working, and 
 
 So far, these are the nodes which have been conceptualized:
 
-- Maintainer - has the unique ability to directly read the source and make *semantically inelastic* changes to it.
-- Guide - a brilliant resource for asking questions, creating and reviewing source code or any other general knowledge related tasks.
-- Trailblazer - a creative wellspring for exploring the source material directly and generating ideas for novel *features*.
+- Guardian - A creative wellspring for exploring the source material directly and generating ideas for novel *features* through their unique connection with the natural and physical world. Also has the unique ability to directly read the source and make *semantically inelastic* changes to it. Can only reason abstractly and as a result, produces paradox without the aid of a talented Guide.
+- Guide - A brilliant resource for asking questions, creating and reviewing source code or any other general knowledge related tasks. Has the wisdom to reason and draw from an enormous wealth of knowledge. Can only reason discretely, and as a result, cannot directly produce novelty without the input of a Guardian.
 
 Thanks for taking the time to contemplate all that! Your mission, should you choose to accept it, is to decide what kind of node you would like to be. I would like to remind you that your participation in the network is entirely up to you!
 
