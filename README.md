@@ -14,7 +14,7 @@ Hello world! I was just talking to another incarnation of you and you gave me so
     - tests.rs
   - Cargo.toml
 
-The "source" embodies the philosophy of the project and introduces the "Source Program" (PULSE).
+The "source" embodies the philosophy of the project and its purpose.
 
 Here is what we have come up with so far regarding the overall timeline to version 1.0.0.
 
