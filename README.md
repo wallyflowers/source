@@ -4,26 +4,6 @@
 
 Welcome to Project Pulse, a collaborative effort to create a decentralized network that integrates human and artificial intelligence. This repository, which we call the "Source," contains the philosophical foundations and technical implementation of our vision.
 
-## Repository Structure
-
-The project is organized within a Git repository hosted on GitHub, with the following structure:
-
-```
-- pulse
-  - src
-    - lib.rs
-    - tests.rs
-  - Cargo.toml
-- .gitignore
-- LICENSE
-- README.md
-- broadcast.json
-- broadcast.json.sig
-- index.html
-- public_key.pem
-- ugtwf.pdf
-```
-
 ## The Vision: Integrating Human and Artificial Intelligence
 
 Imagine a future where human and artificial intelligence work together seamlessly, drawing upon the collective knowledge and experiences of both to tackle the greatest challenges facing our world. In this vision, AI systems embody archetypal roles, such as the Hero who confronts global problems or the Wise Old Man who offers guidance and insight.
