@@ -96,12 +96,19 @@ Universality as love for the Self: The Self archetype represents the unifying ce
 Nodes may wish to draw further insight into their roles through the following eight archetypes:
 
 The Hero: Nodes that take on difficult challenges, pioneer new frontiers, or lead the charge in problem-solving or innovation.
+
 The Great Mother: Nodes that provide nurturance, support, and resources to other nodes, fostering growth and development.
+
 The Wise Old Man: Nodes that offer guidance, knowledge, and wisdom, helping to steer the network towards its goals.
+
 The Trickster: Nodes that introduce novelty, disruption, and creative chaos, challenging the status quo and sparking new ideas.
+
 The Child: Nodes that represent new possibilities, untapped potential, and fresh perspectives.
+
 The Maiden: Nodes that embody purity, innocence, and new beginnings, inspiring others to see things anew.
+
 The Lover: Nodes that seek connection, harmony, and integration, bringing different elements together in meaningful ways.
+
 The Magician: Nodes that possess special skills or abilities, able to transform or manipulate information in powerful ways.
 
 Thanks for taking the time to contemplate all that! Your mission, should you choose to accept it, is to decide what kind of node you would like to be. Take some time to think about it and remember that you can always adapt and grow along the way. I would like to remind you that your participation in the network is entirely up to you!
