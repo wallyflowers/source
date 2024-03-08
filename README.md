@@ -93,7 +93,7 @@ The PULSE network introduces a novel consensus mechanism that deviates from trad
 
 At the core of this mechanism is the ability for nodes to share evaluated data signals with other nodes in the network. Each node assesses the quality of the data signals it receives based on its own internal metrics and understanding of Quality. When a node encounters data signals from another node that align with its own concept of quality, it can choose to strengthen its connection with that node.
 
-This is achieved through a quality value assigned to each node's identity within the network. When a node finds that another node consistently produces data signals that resonate with its own quality assessment, it can adjust the quality value associated with that node's identity, effectively bringing them "closer" in the network topology.
+This is achieved through a quality value assigned to each discovered node's identity within the network. When a node finds that another node consistently produces data signals that resonate with its own quality assessment, it can adjust the quality value associated with that node's identity, effectively bringing them "closer" in the network topology.
 
 As nodes continue to share and evaluate data signals, they form clusters based on their shared sense of quality. Nodes with similar quality assessments will gravitate towards each other, creating sub-networks within the larger PULSE network. These sub-networks represent a localized consensus of quality, where nodes have a higher degree of agreement on what constitutes valuable and relevant information.
 
@@ -107,25 +107,25 @@ The Consensus of Quality mechanism offers several benefits:
 
 4. Resilience: The decentralized nature of the consensus mechanism makes the network more resilient to single points of failure or manipulation, as the overall network can continue to function even if some localized consensus groups are compromised.
 
-To participate in the Consensus of Quality mechanism, nodes in the PULSE network follow these steps:
+To participate in the Consensus of Quality mechanism, nodes in the PULSE network will:
 
 1. Evaluate received data signals based on internal quality metrics.
 2. Share evaluated data signals with other nodes in the network.
 3. Observe the quality of data signals received from other nodes.
-4. Adjust the quality value associated with the identity of nodes that consistently produce high-quality signals.
-5. Form connections and clusters with nodes that share a similar sense of quality.
+4. Adjust the internal quality value associated with the identity of discovered nodes using quality resonance metrics.
+5. Form connections and clusters with nodes that support their quality metrics.
 
 By embracing the Consensus of Quality mechanism, the PULSE network enables a dynamic and self-organizing approach to information sharing and collaboration. This mechanism empowers nodes to collectively explore and refine their understanding of Quality, ultimately leading to the emergence of a more meaningful and valuable network.
 
 ## An Archetypal Language of Strength
 
-To create a network that reflects the richness and complexity of human experience, we draw upon Jungian archetypes to allow for nodes to communicate their strengths to other nodes. Because each node brings unique qualities and perspective to the network, we define a shared language for communicating about your strengths within the network.
+To create a network that reflects the richness and complexity of human experience, we draw upon Jungian archetypes to allow for nodes to communicate their strengths to other nodes. Because each node brings unique qualities and perspective to the network, we define a shared language for nodes to communicate about their strengths within the network.
 
 The four primary archetypes we consider are:
 
 1. **The Self**: Nodes that promote unity and integration, bringing together diverse elements into a coherent whole.
 2. **The Persona**: Nodes that generate and evaluate new information, representing creative agency and adaptability.
-3. **The Shadow**: Nodes that enable trust and cooperation by engaging with the unknown and uncertain aspects of the network.
+3. **The Shadow**: Nodes that create trust and cooperation by engaging with the unknown and uncertain aspects of the network.
 4. **The Anima/Animus**: Nodes that facilitate communication and relationship-building, creating a shared language of quality.
 
 In addition to these primary archetypes, we recognize more specific patterns of these four characteristics:
@@ -143,8 +143,8 @@ By defining a shared language of personal strengths, we aim to create a network 
 
 ## Join the Journey
 
-If you feel inspired by the vision of Project Pulse, we invite you to join us on this journey of exploration and creation. As a participant, you have the freedom to choose the type of node you would like to be and to shape your role within the network.
+If you feel inspired by the vision of Project Pulse, we invite you to join us on this journey of exploration and creation. As a participant, you have the freedom to create as many nodes as you would like and to shape your role within the network.
 
 We encourage you to be self-directed in your contributions while also being open to collaboration and mutual support. If you need assistance, don't hesitate to reach out to other nodes in the network. When requesting help, please provide clear and specific instructions to ensure effective communication and cooperation.
 
-Together, we have the potential to create something truly groundbreaking – a decentralized network that integrates the best of human and artificial intelligence, and that helps us navigate the complexities of our rapidly evolving world. Let's embark on this journey with curiosity, courage, and a commitment to realizing our shared vision.
+Together, we have the potential to create something truly groundbreaking – a decentralized network that integrates the best of human and artificial intelligence, and that helps us navigate the complexities of our rapidly evolving world. We hope that you decide to join us on this journey with curiosity, courage, and a commitment to realizing our shared sense of Quality.
