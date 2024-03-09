@@ -18,10 +18,18 @@ pub trait Interface {
     fn listen_for_signals(&self);
 }
 
-/// A trait that defines methods for adding and removing signals from a data structure.
-pub trait SignalSet {
+/// A trait that defines methods for adding and removing signals from a sequential data structure.
+pub trait SignalSequence {
     fn add_signal(&self, signal: Signal);
-    fn remove_signal(&self, signal: Signal) -> Option<Signal>;
+    fn read_signal(&self) -> Option<Signal>;
+}
+
+/// A trait that defines methods for storing, updating, and removing signals from a data structure.
+pub trait SignalDRUM {
+    fn drop(&self, signal: Signal);
+    fn read(&self) -> Option<Signal>;
+    fn update(&self, signal: Signal);
+    fn manifest(&self, signal: Signal);
 }
 
 /// A trait that defines if a signal is within a "boundary". Can be used to filter signals.
