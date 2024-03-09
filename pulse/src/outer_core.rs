@@ -1,4 +1,5 @@
-use crate::inner_core::{Signal, Node, SignalPool};
+use crate::inner_core::{Boundary, Signal};
+use crossbeam_channel::{Sender, Receiver};
 use rsa::RsaPrivateKey;
 use crossbeam_channel::unbounded;
 use std::net::SocketAddr;
@@ -7,6 +8,12 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use serde_json::to_vec;
 use std::thread;
 
+/// Represents a node in the PULSE network.
+pub struct Node {
+    pub address: SocketAddr,            // The Socket address of the node.
+    pub rsa_key_pair: RsaPrivateKey,    // The RSA private key of the node. The public key can be derived from this.
+    pub signal_pool: SignalPool,        // A data structure containing all unprocessed signals for this node.
+}
 
 impl Node {
     // Constructs a new Node with a unique RSA key pair
@@ -14,16 +21,16 @@ impl Node {
         let bits = 2048; // Key size for RSA
         let private_key = RsaPrivateKey::new(&mut rand::thread_rng(), bits)
             .expect("Failed to generate a key");
-        let broadcast_pool = SignalPool::new();
+        let signal_pool = SignalPool::new();
         Node {
             address,
             rsa_key_pair: private_key,
-            broadcast_pool: broadcast_pool,
+            signal_pool: signal_pool,
         }
     }
 
-    pub async fn send_broadcast(&self, signal: &Signal, destination: &SocketAddr) -> Result<(), Box<dyn std::error::Error>> {
-        // Serialize the broadcast using serde_json
+    pub async fn send_signal(&self, signal: &Signal, destination: &SocketAddr) -> Result<(), Box<dyn std::error::Error>> {
+        // Serialize the signal using serde_json
         let serialized = to_vec(signal)?;
         
         // Connect to the destination address
@@ -35,11 +42,11 @@ impl Node {
         Ok(())
     }
 
-    pub async fn listen_for_broadcasts(&self) {
+    pub async fn listen_for_signals(&self) {
         let listener = TcpListener::bind(self.address).await.expect("Failed to bind");
         loop {
             let (mut stream, _) = listener.accept().await.expect("Failed to accept");
-            let pool = self.broadcast_pool.clone();
+            let pool = self.signal_pool.clone();
             tokio::spawn(async move {
                 let mut buffer = vec![0; 1024];
                 let size = stream.read(&mut buffer).await.expect("Failed to read");
@@ -48,6 +55,16 @@ impl Node {
             });
         }
     }
+
+    pub async fn filter_signals(&self, boundary: &dyn Boundary) {
+        
+    }
+}
+
+/// A data structure that can hold signals. Uses crossbeam_channel to send and receive signals.
+pub struct SignalPool {
+    pub sender: Sender<Signal>, // Used to send signals to the pool.
+    pub receiver: Receiver<Signal>, // Used to receive and process signals from the pool.
 }
 
 impl SignalPool {
@@ -62,14 +79,14 @@ impl SignalPool {
     }
 
     pub fn add_signal(&self, signal: Signal) {
-        self.sender.send(signal).expect("Failed to send broadcast");
+        self.sender.send(signal).expect("Failed to send signal");
     }
 
     fn start_processing(&self) {
         let receiver = self.receiver.clone();
         thread::spawn(move || {
-            for broadcast in receiver.iter() {
-                println!("{:?}", broadcast);
+            for signal in receiver.iter() {
+                
             }
         });
     }

@@ -1,43 +1,35 @@
 use serde::{Serialize, Deserialize};
 use std::net::SocketAddr;
-use rsa::RsaPrivateKey;
-use crossbeam_channel::{Sender, Receiver};
 
 
-/// Represents a signal with a SHA-256 hash and data quality.
+/// Represents a signal containing the identity and quality of a piece of data.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Signal {
     hash: String, // The SHA-256 hash of the signal.
     quality: f64, // The quality of the data, represented as a floating point number.
+    signature: String, // The signature of the signal.
+    pub_key: String, // The public key of the sender.
 }
 
-/// Represents a broadcast message.
-#[derive(Serialize, Deserialize, Debug)]
-struct Broadcast {
-    origin: SocketAddr,     // The originating SocketAddr of the broadcast.
-    pub_key: Vec<u8>,       // The serialized public RSA key associated with the broadcast.
-    signals: Vec<Signal>,   // A collection of Signals associated with the broadcast.
+
+/// A trait that defines methods for sending and receiving signals.
+pub trait Interface {
+    fn send_signal(&self, signal: &Signal, destination: &SocketAddr) -> Result<(), Box<dyn std::error::Error>>;
+    fn listen_for_signals(&self);
 }
 
-/// Represents a network node.
-pub struct Node {
-    pub address: SocketAddr,            // The Socket address of the node.
-    pub rsa_key_pair: RsaPrivateKey,    // The RSA private key of the node. The public key can be derived from this.
-    pub broadcast_pool: SignalPool,     // A data structure containing all unprocessed signals for this node.
+/// A trait that defines methods for adding and removing signals from a data structure.
+pub trait SignalSet {
+    fn add_signal(&self, signal: Signal);
+    fn remove_signal(&self, signal: Signal) -> Option<Signal>;
 }
 
-/// Represents a pool of broadcasts.
-pub struct SignalPool {
-    pub sender: Sender<Signal>, // Used to send broadcasts to the pool.
-    pub receiver: Receiver<Signal>, // Used to receive and process broadcasts from the pool.
-}
-
-/// A trait that defines if a signal is within a "boundary".
+/// A trait that defines if a signal is within a "boundary". Can be used to filter signals.
 pub trait Boundary {
     fn is_within(&self, signal: &Signal) -> bool;
 }
 
-/// A trait to qualify, or evaluate a signal.
+/// A trait to qualify, or evaluate a signal. Defines a quality metric for a signal.
 pub trait Qualifier {
-    fn evaluate(&self, signal: &Signal) -> bool;
+    fn evaluate(&self, signal: &Signal) -> f64;
 }
