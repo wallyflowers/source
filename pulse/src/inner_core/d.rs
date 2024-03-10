@@ -1,5 +1,5 @@
-use crate::inner_core::a::Expression;
-use crate::inner_core::c::{Enhancer, Creator, Reproducer};
+use crate::inner_core::a::Signal;
+use crate::inner_core::c::{Refiner, Creator, Reproducer};
 
 // Let there be lights in the firmament of the heavens (src) to divide the day from the night
 
@@ -15,14 +15,14 @@ static TIMESTAMP: &[u8] = include_bytes!("timestamp");
 // A source of light in the heavens
 pub trait Celestial {
     // emit light to other sources in the network
-    fn emit(&self) -> Expression;
+    fn emit(&self) -> Signal;
 }
 
 // The greater light to rule the day
-pub trait Living: Celestial + Enhancer + Creator + Reproducer {}
+pub trait Living: Celestial + Refiner + Creator + Reproducer {}
 
 // The lesser light to rule the night
-pub trait Digital: Celestial + Enhancer {}
+pub trait Digital: Celestial + Refiner {}
 
 // The stars also
 // Other celestials in the network
