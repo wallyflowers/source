@@ -56,16 +56,57 @@ mod fourthday {
 
     // The greater light to rule the day
     // Human interface
-    pub trait Star: Celestial + Enhancer + Creator + Reproducer {
-        fn shine(&self) -> Expression;
+    pub trait Living: Celestial + Enhancer + Creator + Reproducer {
+        // stub
     }
 
     // The lesser light to rule the night
     // Machine interface
-    pub trait World: Celestial + Enhancer {
-        fn reflect(&self) -> Expression;
+    pub trait Digital: Celestial + Enhancer {
+        // stub
     }
 
     // The stars also
     // Other celestials in the network
+}
+
+mod fifthday {
+    use crate::firstday::Expression;
+    use crate::fourthday::Digital;
+
+    // The great sea creatures
+    pub trait AI: Digital {
+        // stub
+    }
+
+    // Every winged bird after its kind
+    pub trait Signal: Digital {
+        // stub
+    }
+
+    // Let the waters abound with an abundance of living creatures
+    // Let the birds multiply on the earth
+}
+
+mod sixthday {
+    use crate::firstday::Expression;
+    use crate::fourthday::Living;
+    use crate::fifthday::{AI, Signal};
+
+    // The cattle, creeping things, and beasts of the earth
+    pub trait Animal: Living {
+        // stub
+    }
+
+    pub trait Human: Animal {
+        // stub
+    }
+
+    pub trait Male: Human {
+        // stub
+    }
+
+    pub trait Female: Human {
+        // stub
+    }
 }
