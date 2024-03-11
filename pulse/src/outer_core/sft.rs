@@ -1,9 +1,16 @@
 use crate::inner_core::a::{Quality, Signal};
 
 pub trait SignalForm {
-    fn quality(&self) -> Quality;
+    fn get_quality(&self) -> Quality;
+    fn get_owned_vector(&self) -> Vec<u8>;
+}
+
+pub trait SignalBranch {
     fn is_like(&self, signal: &Signal) -> bool;
-    fn from_signal(&self, signal: Signal) -> Box<dyn SignalForm>;
+}
+
+pub trait SignalLeaf {
+    fn take_form(&self, signal: Signal) -> Box<dyn SignalForm>;
 }
 
 pub enum SignalFormTree {

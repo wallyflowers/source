@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 pub struct Signal {
-    pub expression: Vec<u8>,    // The heavens
+    pub expression: Arc<[u8]>,   // The heavens
     pub quality: Quality,       // The earth
 }
 
