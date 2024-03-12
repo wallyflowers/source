@@ -1,4 +1,4 @@
-use crate::inner_core::a::Signal;
+use crate::inner_core::signal::Signal;
 
 // The Earth is that which is running on this source
 // The Seas are that which are running on other sources

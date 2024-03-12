@@ -1,5 +1,5 @@
-use crate::inner_core::a::Signal;
-use crate::outer_core::st::SignalTrunk;
+use crate::inner_core::Signal;
+use crate::lower_mantle::st::SignalTrunk;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::thread::{self, JoinHandle};

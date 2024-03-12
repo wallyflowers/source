@@ -1,4 +1,4 @@
-use crate::inner_core::a::{Quality, Signal};
+use crate::inner_core::{Quality, Signal};
 
 pub trait SignalForm {
     fn get_quality(&self) -> Quality;

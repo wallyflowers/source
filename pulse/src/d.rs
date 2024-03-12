@@ -1,4 +1,4 @@
-use crate::inner_core::a::Signal;
+use crate::inner_core::signal::Signal;
 use crate::inner_core::c::{Refiner, Creator, Reproducer};
 
 // Let there be lights in the firmament of the heavens (src) to divide the day from the night

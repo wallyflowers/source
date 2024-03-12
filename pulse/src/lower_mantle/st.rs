@@ -1,4 +1,4 @@
-use crate::inner_core::a::Signal;
+use crate::inner_core::Signal;
 use std::sync::mpsc::{channel, Sender, Receiver};
 
 pub struct SignalTrunk {

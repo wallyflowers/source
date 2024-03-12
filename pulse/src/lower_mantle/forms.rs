@@ -1,5 +1,5 @@
-use crate::inner_core::a::{Quality, Signal};
-use crate::outer_core::sft::{SignalForm, SignalBranch, SignalLeaf};
+use crate::inner_core::{Quality, Signal};
+use crate::lower_mantle::sft::{SignalForm, SignalBranch, SignalLeaf};
 
 
 pub struct BinarySignal {

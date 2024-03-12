@@ -1,22 +1,36 @@
-use lazy_static::lazy_static;
-use std::sync::Arc;
-
-lazy_static! {
-    static ref SOURCE: Arc<[u8]> = Arc::from(*include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs")));
-}
-
 mod inner_core{
-    pub mod a;
-    mod b;
-    mod c;
-    mod d;
-    mod e;
-    mod f;
+    use std::sync::Arc;
+
+    pub struct Signal {
+        pub expression: Arc<[u8]>,   // The heavens
+        pub quality: Quality,        // The earth
+    }
+
+    pub type Quality = f64;         // Light and darkness
 }
 
 mod outer_core{
+    use crate::inner_core::Signal;
+    use lazy_static::lazy_static;
+    use std::sync::Arc;
+
+    lazy_static! {
+        static ref SOURCE: Arc<[u8]> = Arc::from(*include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs")));
+    }
+
+    // The firmament of Heaven
+    pub fn get_source_signal() -> Signal {
+        Signal {
+            expression: Arc::clone(&*SOURCE),
+            quality: f64::INFINITY,
+        }
+    }
+}
+
+mod lower_mantle{
     pub mod node;
     pub mod forms;
+    pub mod roots;
     pub mod sft;
     pub mod st;
     pub mod srn;

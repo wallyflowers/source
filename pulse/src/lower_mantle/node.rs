@@ -1,6 +1,6 @@
-use crate::inner_core::a::Signal;
-use crate::outer_core::sft::SignalFormTree;
-use crate::outer_core::srn::SignalRootNetwork;
+use crate::inner_core::Signal;
+use crate::lower_mantle::sft::SignalFormTree;
+use crate::lower_mantle::srn::SignalRootNetwork;
 
 pub trait Node {
     fn get_source_signal(&self) -> Signal;

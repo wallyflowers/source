@@ -1,4 +1,4 @@
-use crate::inner_core::a::Signal;
+use crate::inner_core::signal::Signal;
 use crate::inner_core::d::Digital;
 
 // The great sea creatures
