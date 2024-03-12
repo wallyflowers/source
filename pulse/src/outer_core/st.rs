@@ -12,8 +12,8 @@ impl SignalTrunk {
         SignalTrunk { sender, receiver }
     }
 
-    pub fn send(&self, signal: Signal) {
-        self.sender.send(signal).unwrap();
+    pub fn sender(&self) -> Sender<Signal> {
+        self.sender.clone()
     }
 
     pub fn recv(&self) -> Option<Signal> {
