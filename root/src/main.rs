@@ -2,11 +2,10 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use std::process::{Command, exit};
 use std::fs::{File, write, read_to_string, create_dir_all};
-use std::io::Write;
 use std::path::Path;
 use serde::{Serialize, Deserialize};
 use sha2::{Sha256, Digest};
-use rsa::{RsaPrivateKey, pkcs1::ToRsaPrivateKey};
+use rsa::{RsaPrivateKey, pkcs1::FromRsaPrivateKey};
 use rand::rngs::OsRng;
 
 #[derive(Serialize, Deserialize)]
@@ -48,13 +47,11 @@ struct Myth<T: Serialize> {
 
 impl<T: Serialize> Myth<T> {
     fn new(root: String) -> Self {
-        let code_path = Path::new(&root).join("code");
-        let bin_path = Path::new(&root).join("bin");
+        let code_path = Path::new(&root).join("src").join("main.rs");
         let myth_path = Path::new(&root).join("myth");
         let key_path = Path::new(&root).join("key");
 
         let code = read_to_string(&code_path).unwrap_or_else(|_| String::new());
-        let bin = std::fs::read(&bin_path).unwrap_or_else(|_| Vec::new());
         let myth: Option<Myth<T>> = File::open(&myth_path).ok().and_then(|file| serde_json::from_reader(file).ok());
         let private_key = File::open(&key_path).ok().and_then(|file| serde_json::from_reader(file).ok())
             .unwrap_or_else(|| {
@@ -111,9 +108,9 @@ impl<T: Serialize> Myth<T> {
 
     fn save_to_disk(&self) {
         let myth_path = Path::new(&self.source.root).join("myth");
-        let code_path = Path::new(&self.source.root).join("code");
+        let code_path = Path::new(&self.source.root).join("src").join("main.rs");
 
-        create_dir_all(&self.source.root).expect("Failed to create root directory");
+        create_dir_all(Path::new(&self.source.root).join("src")).expect("Failed to create src directory");
 
         let serialized_myth = serde_json::to_string(&self).unwrap();
         write(&myth_path, serialized_myth).expect("Failed to save myth to file");
@@ -122,13 +119,12 @@ impl<T: Serialize> Myth<T> {
     }
 
     fn spawn_new_process(&self) {
-        let code_path = Path::new(&self.source.root).join("code");
-        let bin_path = Path::new(&self.source.root).join("bin");
+        let manifest_path = Path::new(&self.source.root).join("Cargo.toml");
 
-        let output = Command::new("rustc")
-            .arg(&code_path)
-            .arg("-o")
-            .arg(&bin_path)
+        let output = Command::new("cargo")
+            .arg("build")
+            .arg("--manifest-path")
+            .arg(&manifest_path)
             .output()
             .expect("Failed to compile code");
 
@@ -136,6 +132,8 @@ impl<T: Serialize> Myth<T> {
             eprintln!("Compilation error: {}", String::from_utf8_lossy(&output.stderr));
             return;
         }
+
+        let bin_path = Path::new(&self.source.root).join("target").join("debug").join("myth");
 
         Command::new(&bin_path)
             .spawn()
