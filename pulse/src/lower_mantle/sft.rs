@@ -1,4 +1,4 @@
-use crate::inner_core::{Quality, Signal};
+use crate::inner_core::Graph;
 
 pub trait SignalForm {
     fn get_quality(&self) -> Quality;
@@ -10,7 +10,7 @@ pub trait SignalBranch {
 }
 
 pub trait SignalLeaf {
-    fn take_form(&self, signal: Signal) -> Box<dyn SignalForm>;
+    fn new(&self, signal: Signal) -> Box<dyn SignalForm>;
 }
 
 pub enum SignalFormTree {

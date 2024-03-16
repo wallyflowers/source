@@ -18,7 +18,7 @@ impl SignalForm for BinarySignal {
 }
 
 impl SignalLeaf for BinarySignal {
-    fn take_form(&self, signal: Signal) -> Box<dyn SignalForm> {
+    fn new(&self, signal: Signal) -> Box<dyn SignalForm> {
         Box::new(BinarySignal {
             quality: signal.quality,
             data: signal.expression.to_vec(),
@@ -48,7 +48,7 @@ impl SignalBranch for Sha256Signal {
 }
 
 impl SignalLeaf for Sha256Signal {
-    fn take_form(&self, signal: Signal) -> Box<dyn SignalForm> {
+    fn new(&self, signal: Signal) -> Box<dyn SignalForm> {
         Box::new(Sha256Signal {
             quality: signal.quality,
             hash: signal.expression.as_ref().try_into().unwrap(),
@@ -78,7 +78,7 @@ impl SignalBranch for AsciiSignal {
 }
 
 impl SignalLeaf for AsciiSignal {
-    fn take_form(&self, signal: Signal) -> Box<dyn SignalForm> {
+    fn new(&self, signal: Signal) -> Box<dyn SignalForm> {
         Box::new(AsciiSignal {
             quality: signal.quality,
             text: String::from_utf8(signal.expression.to_vec()).unwrap(),
