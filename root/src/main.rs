@@ -10,11 +10,16 @@ type Socket = [u8; 6];
 type Value = f64;
 type Data = Vec<u8>;
 
+type Presence = (Hash, Socket, Time);
+type Quality = (Hash, Value);
+type Knowledge = (Hash, Data);
+
 type PresenceMap = HashMap<Hash, Vec<(Socket, Time)>>;  // The sockets and times from which a hash was confirmed to be present in knowledge received.
                                                         // "I have seen this hash at these sockets at these times"
-type QualityMap = HashMap<Hash, Value>;                 // The quality of the data, as a value between f64::min and f64::max.
+type QualityMap = HashMap<Hash, Vec<Value>>;            // The quality of the data, as a value between f64::min and f64::max.
                                                         // f64::min = "I believe this hash to be not worth your resources to review."
-                                                        // f64::max = "I believe this hash to be this worth your resources to review."
+                                                        // 0.5 = "I am indifferent about this hash."
+                                                        // f64::max = "I believe this hash to be worth your resources to review."
                                                         // 0 = "I believe this hash to be harmful to review."
                                                         // infinity = "I believe this hash to be critical to review."
 type KnowledgeMap = HashMap<Hash, Data>;                // The hash of the data and the data itself 
