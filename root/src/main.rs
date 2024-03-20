@@ -50,61 +50,42 @@ impl Memory for KnowledgeMap {
     }
 }
 
-fn share_knowledge(sockets: &[Socket], knowledge: &KnowledgeMap) {
+fn share_knowledge(socket: &Socket, knowledge: &Knowledge) {
     let serialized_knowledge = bincode::serialize(knowledge).unwrap();
-    for socket in sockets {
-        let socket_address = format!(
-            "{}.{}.{}.{}:{}",
-            socket[0],
-            socket[1],
-            socket[2],
-            socket[3],
-            (socket[4] as u16) << 8 | socket[5] as u16
-        );
-        if let Ok(mut stream) = TcpStream::connect(socket_address) {
-            stream.write_all(&[0, 0]).unwrap(); // Prefix for knowledge message
-            stream.write_all(&serialized_knowledge).unwrap();
-        }
+    let socket_address = format_socket_address(socket);
+    if let Ok(mut stream) = TcpStream::connect(socket_address) {
+        stream.write_all(&[0, 0]).unwrap(); // Prefix for knowledge message
+        stream.write_all(&serialized_knowledge).unwrap();
     }
 }
 
-fn share_presence(sockets: &[Socket], presence: &PresenceMap) {
+fn share_presence(socket: &Socket, presence: &Presence) {
     let serialized_presence = bincode::serialize(presence).unwrap();
-    for socket in sockets {
-        let socket_address = format!(
-            "{}.{}.{}.{}:{}",
-            socket[0],
-            socket[1],
-            socket[2],
-            socket[3],
-            (socket[4] as u16) << 8 | socket[5] as u16
-        );
-        if let Ok(mut stream) = TcpStream::connect(socket_address) {
-            stream.write_all(&[1]).unwrap(); // Prefix for presence message
-            stream.write_all(&serialized_presence).unwrap();
-        }
+    let socket_address = format_socket_address(socket);
+    if let Ok(mut stream) = TcpStream::connect(socket_address) {
+        stream.write_all(&[1, 0]).unwrap(); // Adjusted prefix for presence message
+        stream.write_all(&serialized_presence).unwrap();
     }
 }
 
-fn share_quality(sockets: &[Socket], quality: &QualityMap) {
+fn share_quality(socket: &Socket, quality: &Quality) {
     let serialized_quality = bincode::serialize(quality).unwrap();
-    for socket in sockets {
-        let socket_address = format!(
-            "{}.{}.{}.{}:{}",
-            socket[0],
-            socket[1],
-            socket[2],
-            socket[3],
-            (socket[4] as u16) << 8 | socket[5] as u16
-        );
-        if let Ok(mut stream) = TcpStream::connect(socket_address) {
-            stream.write_all(&[0, 1]).unwrap(); // Prefix for quality message
-            stream.write_all(&serialized_quality).unwrap();
-        }
+    let socket_address = format_socket_address(socket);
+    if let Ok(mut stream) = TcpStream::connect(socket_address) {
+        stream.write_all(&[0, 1]).unwrap(); // Prefix for quality message
+        stream.write_all(&serialized_quality).unwrap();
     }
 }
 
-fn listen(port: u16, knowledge: &mut KnowledgeMap, presence: &mut PresenceMap, quality: &mut QualityMap) {
+fn format_socket_address(socket: &Socket) -> String {
+    format!(
+        "{}.{}.{}.{}:{}",
+        socket[0], socket[1], socket[2], socket[3],
+        (socket[4] as u16) << 8 | socket[5] as u16
+    )
+}
+
+fn listen(port: u16, knowledge_map: &mut KnowledgeMap, presence_map: &mut PresenceMap, quality_map: &mut QualityMap) {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).unwrap();
 
     for stream in listener.incoming() {
@@ -113,27 +94,27 @@ fn listen(port: u16, knowledge: &mut KnowledgeMap, presence: &mut PresenceMap, q
             stream.read_exact(&mut prefix).unwrap();
 
             match prefix {
-                [1, _] => {
+                [1, 0] => {
                     // Presence message
                     let mut serialized_presence = Vec::new();
                     stream.read_to_end(&mut serialized_presence).unwrap();
-                    let received_presence: PresenceMap = bincode::deserialize(&serialized_presence).unwrap();
-                    presence.extend(received_presence);
-                }
+                    let presence: Presence = bincode::deserialize(&serialized_presence).unwrap();
+                    presence_map.entry(presence.0).or_insert(Vec::new()).push((presence.1, presence.2));
+                },
                 [0, 1] => {
                     // Quality message
                     let mut serialized_quality = Vec::new();
                     stream.read_to_end(&mut serialized_quality).unwrap();
-                    let received_quality: QualityMap = bincode::deserialize(&serialized_quality).unwrap();
-                    quality.extend(received_quality);
-                }
+                    let quality: Quality = bincode::deserialize(&serialized_quality).unwrap();
+                    quality_map.entry(quality.0).or_insert(Vec::new()).push(quality.1);
+                },
                 [0, 0] => {
                     // Knowledge message
                     let mut serialized_knowledge = Vec::new();
                     stream.read_to_end(&mut serialized_knowledge).unwrap();
-                    let received_knowledge: KnowledgeMap = bincode::deserialize(&serialized_knowledge).unwrap();
-                    knowledge.commit(&received_knowledge);
-                }
+                    let knowledge: Knowledge = bincode::deserialize(&serialized_knowledge).unwrap();
+                    knowledge_map.insert(knowledge.0, knowledge.1);
+                },
                 _ => {
                     // Invalid prefix
                     eprintln!("Invalid message prefix");
@@ -179,6 +160,7 @@ fn main() {
     let mut knowledge_map = KnowledgeMap::new();
     let mut presence_map = PresenceMap::new();
     let mut quality_map = QualityMap::new();
+    let mut streams = KnowledgeMap::new();
 
     // Start listening for incoming messages
     listen(34, &mut knowledge_map, &mut presence_map, &mut quality_map);
