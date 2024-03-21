@@ -27,46 +27,52 @@ enum Signal {
     /// The data which a hash was generated from.
     /// > "I know this hash and I can confirm this is the data it corresponds to."
     Source(Data),
-    /// The quality of the data, as a value between f64::min and f64::max.
-    /// > f64::min = "I believe this data to be not worth your resources to review."
+    /// The quality reported at the hash, as a value between f64::min and f64::max.
+    /// > f64::min = "I believe this hash's source to be *not* worth your resources to review."
     /// 
-    /// > 0.5 = "I do not know whether this data is worth your resources to review."
+    /// > 0.5 = "I do not know whether this hash's source is worth your resources to review."
     /// 
-    /// > f64::max = "I believe this data to be worth your resources to review."
+    /// > f64::max = "I believe this hash's source to be worth your resources to review."
     /// 
-    /// > 0 = "I believe this data to be harmful to review."
+    /// > 0 = "I believe this hash's source to be harmful to review."
     /// 
-    /// > infinity = "I believe this data to be critical to review."
+    /// > infinity = "I believe this hash's source to be critical to review."
     Quality(f64),
-    /// The sockets from and times at which a hash is reported to be have been provided.
-    /// > "I have received and checked the hash from this sockets at this time. The data does (not) match the hash."
-    Presence(Socket, Time, bool),
+    /// The socket and time a hash was reported received.
+    /// > "I have received the hash from this socket at this time and trust its authenticity."
+    Presence(Socket, Time),
     /// A name for the data.
     /// > "I call this hash by this name."
     Name(String),
-    /// A signal containing a filename for the hash.
-    /// > "I store this hash with this file name."
-    FileName(String),
-    /// A signal that the data is a pyton source file.
-    PY(Data),
-    /// A signal that the data is a text file.
-    TXT(Data),
     /// A signal that the data is a Rust source file.
     RS(Data),
+    /// A signal that the data is a pyton source file.
+    PY(Data),
+    /// A signal that the data is a markdown file.
+    MD(Data),
+    /// A signal that the data is a text file.
+    TXT(Data),
 }
 
-type Data = Vec<u8>;        // A piece of data
-type Socket = [u8; 6];      // A 48-bit TCP/IP socket
-type Time = i32;            // A 32-bit Unix timestamp
-type Hash = [u8; 32];       // A 256-bit SHA hash
+/// A type to represent any piece of information.
+type Data = Vec<u8>;
+/// A 48-bit TCP/IP socket.
+type Socket = [u8; 6];
+/// A 32-bit Unix timestamp used to record the time a signal was received.
+type Time = i32;
+/// A 256-bit SHA hash representing a location in a memory.
+type Hash = [u8; 32];
 
-type KnowledgeMap =  HashMap<Hash, Vec<Signal>>;      // A map that contains context about hashes
+/// The most basic form of memory.
+type KnowledgeMap =  HashMap<Hash, Vec<Signal>>;
 
 type Stream = Vec<Socket>;
 
-// A trait for a memory which can commit and recall signals it remembers about the corresponding hash
+/// A trait for a `Memory` which can commit and recall `Signal`s at the corresponding hash.
 trait Memory {
-    fn commit(&mut self, hash: Hash, archetype: Signal, data: &Data);
+    /// Copy a signal into the memory at the hash.
+    fn commit(&mut self, hash: Hash, signal: Signal);
+    /// Recall a copy of the signals at the hash.
     fn recall(&self, hash: Hash) -> Option<Vec<Signal>>;
 }
 
@@ -74,25 +80,26 @@ trait Memory {
 impl Memory for KnowledgeMap {
     // TODO verify that the hash is the hash of the data
 
-    fn commit(&mut self, hash: Hash, archetype: Signal, data: &Data) {
-        let serialized_data = bincode::serialize(data).unwrap();
+    /// Commit a signal to the `KnowledgeMap` by copying the signal to the vector of signals at the hash.
+    fn commit(&mut self, hash: Hash, signal: Signal) {
         let signals = self.get_mut(&hash);
         match signals {
             Some(signals) => {
-                signals.push((archetype, serialized_data)); // TODO figure out how to serialize the data
+                signals.push(signal);
             }
             None => {
-                self.insert(hash, vec![(archetype, serialized_data)]);
+                self.insert(hash, vec![signal]);
             }
         }
     }
 
+    /// Recall from the `KnowledgeMap` a copy of the vector of signals at the hash.
     fn recall(&self, hash: Hash) -> Option<Vec<Signal>> {
-        let contexts = self.get(&hash);
-        match contexts {
-            Some(contexts) => {
-                let contexts: Vec<Signal> = contexts.to_vec();
-                Some(contexts)
+        let signals = self.get(&hash);
+        match signals {
+            Some(signals) => {
+                let signals: Vec<Signal> = signals.to_vec();
+                Some(signals)
             }
             None => {
                 None
