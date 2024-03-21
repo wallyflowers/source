@@ -11,6 +11,7 @@ type Value = f64;           // A 64-bit floating point number
 type Data = Vec<u8>;        // A variable-length byte array
 type Typecode = [u8; 2];    // A 16-bit type code
 
+// TODO make presence and quality a type of knowledge (the data for the hash = 0, quality = 1, presence = 2, etc.)
 type Presence = (Hash, Socket, Time);   // The sockets from and times at which a hash was confirmed to be have been provided.
                                         // "I have seen this hash at these sockets at these times"
 type Quality = (Hash, Value);           // The quality of the data, as a value between f64::min and f64::max.
@@ -19,40 +20,57 @@ type Quality = (Hash, Value);           // The quality of the data, as a value b
                                         // f64::max = "I believe this data to be worth your resources to review."
                                         // 0 = "I believe this data to be harmful to review."
                                         // infinity = "I believe this data to be critical to review."
-type Knowledge = (Hash, Data);          // The hash of the data and the data itself 
-                                        // "I know this hash and this is the data"
+type Knowledge = (Hash, Typecode, Data);// The hash of the data, the type of data, and the data itself 
+                                        // "I know this hash and this is the data and how to read it with our agreed upon lens."
 
 type PresenceMap = HashMap<Hash, Vec<(Socket, Time)>>;
 type QualityMap = HashMap<Hash, Vec<Value>>;
-type KnowledgeMap = HashMap<Hash, Data>;
 
-// A trait for a memory which can commit and recall data by hash
+
+//TODO: type Knowledge = (Typecode, Data);
+type KnowledgeMap =  HashMap<Hash, Vec<(Typecode, Data)>>;
+
+type Stream = Vec<Socket>;
+
+// A trait for a memory which can commit and recall data using the corresponding hash
 trait Memory {
-    fn commit(&mut self, data: &Data);
-    fn recall(&self, hash: Hash) -> Option<Data>;
+    fn commit(&mut self, hash: Hash, t: Typecode, data: &Data);
+    fn recall(&self, hash: Hash) -> Option<Vec<(Typecode, Data)>>;
 }
 
 
 impl Memory for KnowledgeMap {
-    fn commit(&mut self, data: &Data) {
+    // TODO verify that the hash is the hash of the data
+
+    fn commit(&mut self, hash: Hash, t: Typecode, data: &Data) {
         let serialized_data = bincode::serialize(data).unwrap();
-        let mut hasher = Sha256::new();
-        hasher.update(&serialized_data);
-        let hash = hasher.finalize().into();
-        self.insert(hash, serialized_data);
+        let knowledge = self.get_mut(&hash);
+        match knowledge {
+            Some(knowledge) => {
+                knowledge.push((t, serialized_data));
+            }
+            None => {
+                self.insert(hash, vec![(t, serialized_data)]);
+            }
+        }
     }
 
-    fn recall(&self, hash: Hash) -> Option<Data> {
-        let data = self.get(&hash);
-        match data {
-            Some(data) => {
-                Some(bincode::deserialize(data).unwrap())
+    fn recall(&self, hash: Hash) -> Option<Vec<(Typecode, Data)>> {
+        let knowledge = self.get(&hash);
+        match knowledge {
+            Some(knowledge) => {
+                let knowledge: Vec<(Typecode, Data)> = knowledge.clone();
+                Some(knowledge)
             }
-            None => None,
+            None => {
+                None
+            }
         }
     }
 }
 
+
+// TODO: make share take a stream and a vector of knowledge, send the knowledge to all the sockets in the stream
 fn share<T: serde::Serialize>(socket: &Socket, prefix: &[u8; 2], data: &T) {
     let serialized_data = bincode::serialize(data).unwrap();
     let socket_address = format_socket_address(socket);
@@ -62,6 +80,7 @@ fn share<T: serde::Serialize>(socket: &Socket, prefix: &[u8; 2], data: &T) {
     }
 }
 
+// TODO: Remove the separate knowledge, presence, and quality sharing functions and make a single share function
 fn share_knowledge(socket: &Socket, knowledge: &Knowledge) {
     share(socket, &[0, 0], knowledge);
 }
@@ -82,55 +101,36 @@ fn format_socket_address(socket: &Socket) -> String {
     )
 }
 
-// Listen for incoming messages and update the knowledge map, presence map, and quality map accordingly
-// TODO: Filter out messages
-fn listen(port: u16, knowledge_map: &mut KnowledgeMap, presence_map: &mut PresenceMap, quality_map: &mut QualityMap) {
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).unwrap();
+// TODO: make a single request stream function that takes a teacher socket and a student socket
+// Send a request to the teacher containing a tuple of the student's socket as Knowledge of type "stream_request".
+fn request_presence_stream(teacher: &Socket, student_port: u16) -> Result<(), std::io::Error> {
+    let socket_address = format_socket_address(teacher);
+    let mut stream = TcpStream::connect(socket_address)?;
+    stream.write_all(&[0, 0])?; // Prefix for requesting presence stream
+    stream.write_all(&student_port.to_be_bytes())?;
+    Ok(())
+}
 
-    for stream in listener.incoming() {
-        if let Ok(mut stream) = stream {
-            let mut prefix = [0; 2];
-            stream.read_exact(&mut prefix).unwrap();
+fn request_quality_stream(teacher: &Socket, student_port: u16) -> Result<(), std::io::Error> {
+    let socket_address = format_socket_address(teacher);
+    let mut stream = TcpStream::connect(socket_address)?;
+    stream.write_all(&[0, 1])?; // Prefix for requesting quality stream
+    stream.write_all(&student_port.to_be_bytes())?;
+    Ok(())
+}
 
-            match prefix {
-                [1, 0] => {
-                    // Presence message
-                    let mut serialized_presence = Vec::new();
-                    stream.read_to_end(&mut serialized_presence).unwrap();
-                    let presence: Presence = bincode::deserialize(&serialized_presence).unwrap();
-                    presence_map.entry(presence.0).or_insert(Vec::new()).push((presence.1, presence.2));
-                },
-                [0, 1] => {
-                    // Quality message
-                    let mut serialized_quality = Vec::new();
-                    stream.read_to_end(&mut serialized_quality).unwrap();
-                    let quality: Quality = bincode::deserialize(&serialized_quality).unwrap();
-                    quality_map.entry(quality.0).or_insert(Vec::new()).push(quality.1);
-                },
-                [0, 0] => {
-                    // Knowledge message
-                    let mut serialized_knowledge = Vec::new();
-                    stream.read_to_end(&mut serialized_knowledge).unwrap();
-                    let knowledge: Knowledge = bincode::deserialize(&serialized_knowledge).unwrap();
-                    knowledge_map.insert(knowledge.0, knowledge.1);
-                },
-                _ => {
-                    // Invalid prefix
-                    eprintln!("Invalid message prefix");
-                }
-            }
-        }
+// TODO: send a request to the teacher containing the hash of the knowledge the student wants to learn about as Knowledge of type "knowledge_request".
+fn request_knowledge(socket: &Socket, hash: Hash) -> Option<Knowledge> {
+    let socket_address = format_socket_address(socket);
+    if let Ok(mut stream) = TcpStream::connect(socket_address) {
+        stream.write_all(&hash).unwrap();
+        let mut serialized_knowledge = Vec::new();
+        stream.read_to_end(&mut serialized_knowledge).unwrap();
+        let knowledge: Knowledge = bincode::deserialize(&serialized_knowledge).unwrap();
+        Some(knowledge)
+    } else {
+        None
     }
-}
-
-// Find a source which your current quality map suggests is the best source for you to listen to
-fn find_source(quality_map: QualityMap) -> Option<Socket> {
-    // TODO
-}
-
-// Find a teacher which your current presence map suggests is the best teacher for a given hash
-fn find_teacher(presence_map: PresenceMap, hash: Hash) -> Option<Socket> {
-    // TODO
 }
 
 fn main() {
@@ -139,7 +139,7 @@ fn main() {
     let mut presence_map = PresenceMap::new();
     let mut quality_map = QualityMap::new();
 
-    let mut pupils: Vec<Socket> = Vec::new();
+    let mut student: Vec<Socket> = Vec::new();
 
     // Start listening for incoming messages
     listen(34, &mut knowledge_map, &mut presence_map, &mut quality_map);
