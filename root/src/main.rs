@@ -4,34 +4,36 @@ use bincode;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 
-type Hash = [u8; 32];
-type Time = i32;
-type Socket = [u8; 6];
-type Value = f64;
-type Data = Vec<u8>;
+type Hash = [u8; 32];       // A 256-bit SHA hash
+type Time = i32;            // A 32-bit Unix timestamp
+type Socket = [u8; 6];      // A 48-bit TCP/IP socket
+type Value = f64;           // A 64-bit floating point number
+type Data = Vec<u8>;        // A variable-length byte array
+type Typecode = [u8; 2];    // A 16-bit type code
 
-type Presence = (Hash, Socket, Time);
-type Quality = (Hash, Value);
-type Knowledge = (Hash, Data);
+type Presence = (Hash, Socket, Time);   // The sockets from and times at which a hash was confirmed to be have been provided.
+                                        // "I have seen this hash at these sockets at these times"
+type Quality = (Hash, Value);           // The quality of the data, as a value between f64::min and f64::max.
+                                        // f64::min = "I believe this data to be not worth your resources to review."
+                                        // 0.5 = "I am indifferent about this data."
+                                        // f64::max = "I believe this data to be worth your resources to review."
+                                        // 0 = "I believe this data to be harmful to review."
+                                        // infinity = "I believe this data to be critical to review."
+type Knowledge = (Hash, Data);          // The hash of the data and the data itself 
+                                        // "I know this hash and this is the data"
 
-type PresenceMap = HashMap<Hash, Vec<(Socket, Time)>>;  // The sockets and times from which a hash was confirmed to be present in knowledge received.
-                                                        // "I have seen this hash at these sockets at these times"
-type QualityMap = HashMap<Hash, Vec<Value>>;            // The quality of the data, as a value between f64::min and f64::max.
-                                                        // f64::min = "I believe this hash to be not worth your resources to review."
-                                                        // 0.5 = "I am indifferent about this hash."
-                                                        // f64::max = "I believe this hash to be worth your resources to review."
-                                                        // 0 = "I believe this hash to be harmful to review."
-                                                        // infinity = "I believe this hash to be critical to review."
-type KnowledgeMap = HashMap<Hash, Data>;                // The hash of the data and the data itself 
-                                                        // "I know this hash and this is the data"
+type PresenceMap = HashMap<Hash, Vec<(Socket, Time)>>;
+type QualityMap = HashMap<Hash, Vec<Value>>;
+type KnowledgeMap = HashMap<Hash, Data>;
 
 trait Memory {
-    fn commit(&mut self, knowledge: &KnowledgeMap);
-    fn recall(&self, hash: Hash) -> Option<KnowledgeMap>;
+    fn commit(&mut self, knowledge: &Knowledge);
+    fn recall(&self, hash: Hash) -> Option<Knowledge>;
 }
 
+// Allow the KnowledgeMap to be used as a Memory for storing and recalling knowledge
 impl Memory for KnowledgeMap {
-    fn commit(&mut self, knowledge: &KnowledgeMap) {
+    fn commit(&mut self, knowledge: &Knowledge) {
         let serialized_data = bincode::serialize(knowledge).unwrap();
         let mut hasher = Sha256::new();
         hasher.update(&serialized_data);
@@ -39,7 +41,7 @@ impl Memory for KnowledgeMap {
         self.insert(hash, serialized_data);
     }
 
-    fn recall(&self, hash: Hash) -> Option<KnowledgeMap> {
+    fn recall(&self, hash: Hash) -> Option<Knowledge> {
         let data = self.get(&hash);
         match data {
             Some(data) => {
@@ -63,7 +65,7 @@ fn share_presence(socket: &Socket, presence: &Presence) {
     let serialized_presence = bincode::serialize(presence).unwrap();
     let socket_address = format_socket_address(socket);
     if let Ok(mut stream) = TcpStream::connect(socket_address) {
-        stream.write_all(&[1, 0]).unwrap(); // Adjusted prefix for presence message
+        stream.write_all(&[1, 0]).unwrap(); // Prefix for presence message
         stream.write_all(&serialized_presence).unwrap();
     }
 }
@@ -85,6 +87,8 @@ fn format_socket_address(socket: &Socket) -> String {
     )
 }
 
+// Listen for incoming messages and update the knowledge map, presence map, and quality map accordingly
+// TODO: Filter out messages
 fn listen(port: u16, knowledge_map: &mut KnowledgeMap, presence_map: &mut PresenceMap, quality_map: &mut QualityMap) {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).unwrap();
 
@@ -124,43 +128,23 @@ fn listen(port: u16, knowledge_map: &mut KnowledgeMap, presence_map: &mut Presen
     }
 }
 
-fn find_teacher(presence: &PresenceMap, hash: Hash) -> Option<Socket> {
-    // Extract the list of presences for the given hash
-    if let Some(presences) = presence.get(&hash) {
-        let mut socket_counts = HashMap::new(); // To count each socket's frequency
-        let mut socket_times = HashMap::new(); // To track the most recent time for each socket
+// Find a source which your current quality map suggests is the best source for you to listen to
+fn find_source(quality_map: QualityMap) -> Option<Socket> {
+    // TODO
+}
 
-        for (socket, time) in presences {
-            let count = socket_counts.entry(*socket).or_insert(0);
-            *count += 1;
-
-            let socket_time = socket_times.entry(*socket).or_insert(0);
-            if *time > *socket_time {
-                *socket_time = *time; // Update to the most recent time
-            }
-        }
-
-        // Now, determine the socket with the highest count and most recent time
-        socket_counts.into_iter().max_by(|a, b| {
-            let &(ref socket_a, count_a) = a;
-            let &(ref socket_b, count_b) = b;
-
-            let time_a = *socket_times.get(socket_a).unwrap();
-            let time_b = *socket_times.get(socket_b).unwrap();
-
-            count_a.cmp(&count_b) // First, compare by count
-                .then_with(|| time_b.cmp(&time_a)) // In case of tie, use the most recent time (reverse order)
-        }).map(|(socket, _)| socket)
-    } else {
-        None
-    }
+// Find a teacher which your current presence map suggests is the best teacher for a given hash
+fn find_teacher(presence_map: PresenceMap, hash: Hash) -> Option<Socket> {
+    // TODO
 }
 
 fn main() {
     let mut knowledge_map = KnowledgeMap::new();
+    let mut source_map = KnowledgeMap::new();
     let mut presence_map = PresenceMap::new();
     let mut quality_map = QualityMap::new();
-    let mut streams = KnowledgeMap::new();
+
+    let mut pupils: Vec<Socket> = Vec::new();
 
     // Start listening for incoming messages
     listen(34, &mut knowledge_map, &mut presence_map, &mut quality_map);
