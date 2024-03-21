@@ -3,64 +3,83 @@ use sha2::{Sha256, Digest};
 use bincode;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use serde::{Serialize, Deserialize};
 
-type Hash = [u8; 32];       // A 256-bit SHA hash
-type Time = i32;            // A 32-bit Unix timestamp
+/// A collection of universal types of information about a hash.
+/// They provide a way to share knowledge about a hash within a PULSE network.
+/// 
+/// Nodes can communicate with other nodes through shared signal variants.
+#[derive(Serialize, Deserialize, Clone)]
+enum Signal {
+    /// The data which a hash was generated from.
+    /// > "I know this hash and I can confirm this is the data it corresponds to."
+    Source(Data),
+    /// The quality of the data, as a value between f64::min and f64::max.
+    /// > f64::min = "I believe this data to be not worth your resources to review."
+    /// 
+    /// > 0.5 = "I do not know whether this data is worth your resources to review."
+    /// 
+    /// > f64::max = "I believe this data to be worth your resources to review."
+    /// 
+    /// > 0 = "I believe this data to be harmful to review."
+    /// 
+    /// > infinity = "I believe this data to be critical to review."
+    Quality(f64),
+    /// The sockets from and times at which a hash is reported to be have been provided.
+    /// > "I have received and checked the hash from this sockets at this time. The data does (not) match the hash."
+    Presence(Socket, Time, bool),
+    /// A name for the data.
+    /// > "I call this hash by this name."
+    Name(String),
+    /// A signal containing a filename for the hash.
+    /// > "I store this hash with this file name."
+    FileName(String),
+    /// A signal that the data is a pyton source file.
+    PY(Data),
+    /// A signal that the data is a text file.
+    TXT(Data),
+    /// A signal that the data is a Rust source file.
+    RS(Data),
+}
+
+type Data = Vec<u8>;        // A piece of data
 type Socket = [u8; 6];      // A 48-bit TCP/IP socket
-type Value = f64;           // A 64-bit floating point number
-type Data = Vec<u8>;        // A variable-length byte array
-type Typecode = [u8; 2];    // A 16-bit type code
+type Time = i32;            // A 32-bit Unix timestamp
+type Hash = [u8; 32];       // A 256-bit SHA hash
 
-// TODO make presence and quality a type of knowledge (the data for the hash = 0, quality = 1, presence = 2, etc.)
-type Presence = (Hash, Socket, Time);   // The sockets from and times at which a hash was confirmed to be have been provided.
-                                        // "I have seen this hash at these sockets at these times"
-type Quality = (Hash, Value);           // The quality of the data, as a value between f64::min and f64::max.
-                                        // f64::min = "I believe this data to be not worth your resources to review."
-                                        // 0.5 = "I am indifferent about this data."
-                                        // f64::max = "I believe this data to be worth your resources to review."
-                                        // 0 = "I believe this data to be harmful to review."
-                                        // infinity = "I believe this data to be critical to review."
-type Knowledge = (Hash, Typecode, Data);// The hash of the data, the type of data, and the data itself 
-                                        // "I know this hash and this is the data and how to read it with our agreed upon lens."
-
-type PresenceMap = HashMap<Hash, Vec<(Socket, Time)>>;
-type QualityMap = HashMap<Hash, Vec<Value>>;
-
-
-//TODO: type Knowledge = (Typecode, Data);
-type KnowledgeMap =  HashMap<Hash, Vec<(Typecode, Data)>>;
+type KnowledgeMap =  HashMap<Hash, Vec<Signal>>;      // A map that contains context about hashes
 
 type Stream = Vec<Socket>;
 
-// A trait for a memory which can commit and recall data using the corresponding hash
+// A trait for a memory which can commit and recall signals it remembers about the corresponding hash
 trait Memory {
-    fn commit(&mut self, hash: Hash, t: Typecode, data: &Data);
-    fn recall(&self, hash: Hash) -> Option<Vec<(Typecode, Data)>>;
+    fn commit(&mut self, hash: Hash, archetype: Signal, data: &Data);
+    fn recall(&self, hash: Hash) -> Option<Vec<Signal>>;
 }
 
 
 impl Memory for KnowledgeMap {
     // TODO verify that the hash is the hash of the data
 
-    fn commit(&mut self, hash: Hash, t: Typecode, data: &Data) {
+    fn commit(&mut self, hash: Hash, archetype: Signal, data: &Data) {
         let serialized_data = bincode::serialize(data).unwrap();
-        let knowledge = self.get_mut(&hash);
-        match knowledge {
-            Some(knowledge) => {
-                knowledge.push((t, serialized_data));
+        let signals = self.get_mut(&hash);
+        match signals {
+            Some(signals) => {
+                signals.push((archetype, serialized_data)); // TODO figure out how to serialize the data
             }
             None => {
-                self.insert(hash, vec![(t, serialized_data)]);
+                self.insert(hash, vec![(archetype, serialized_data)]);
             }
         }
     }
 
-    fn recall(&self, hash: Hash) -> Option<Vec<(Typecode, Data)>> {
-        let knowledge = self.get(&hash);
-        match knowledge {
-            Some(knowledge) => {
-                let knowledge: Vec<(Typecode, Data)> = knowledge.clone();
-                Some(knowledge)
+    fn recall(&self, hash: Hash) -> Option<Vec<Signal>> {
+        let contexts = self.get(&hash);
+        match contexts {
+            Some(contexts) => {
+                let contexts: Vec<Signal> = contexts.to_vec();
+                Some(contexts)
             }
             None => {
                 None
