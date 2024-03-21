@@ -19,9 +19,7 @@ use std::net::{TcpListener, TcpStream};
 use serde::{Serialize, Deserialize};
 
 /// A collection of universal types of information about a hash.
-/// They provide a way to share knowledge about a hash within a PULSE network.
-/// 
-/// Nodes can communicate with other nodes through shared signal variants.
+/// They provide a way to share knowledge about a hash within a pulse network.
 #[derive(Serialize, Deserialize, Clone)]
 enum Signal {
     /// The data which a hash was generated from.
@@ -66,9 +64,19 @@ type Hash = [u8; 32];
 /// The most basic form of memory.
 type KnowledgeMap =  HashMap<Hash, Vec<Signal>>;
 
-type Stream = Vec<Socket>;
+/// An interface to the pulse network.
+struct Node {
+    /// A map to the `Node`'s knowledge.
+    knowledge_map: KnowledgeMap,
+    /// The "in-neighbors" of a `Node`.
+    /// > "I trust these sockets to provide me with signals that are good for me to know."
+    in_neighbors: Vec<Socket>,
+    /// The "out-neighbors" of a `Node`.
+    /// > "These are sockets which trust me to provide them with signals that are good for them to know."
+    out_neighbors: Vec<Socket>,
+}
 
-/// A trait for a `Memory` which can commit and recall `Signal`s at the corresponding hash.
+/// A trait for a `Memory` which can commit and recall `Signal`'s at the corresponding hash.
 trait Memory {
     /// Copy a signal into the memory at the hash.
     fn commit(&mut self, hash: Hash, signal: Signal);
@@ -76,10 +84,7 @@ trait Memory {
     fn recall(&self, hash: Hash) -> Option<Vec<Signal>>;
 }
 
-
 impl Memory for KnowledgeMap {
-    // TODO verify that the hash is the hash of the data
-
     /// Commit a signal to the `KnowledgeMap` by copying the signal to the vector of signals at the hash.
     fn commit(&mut self, hash: Hash, signal: Signal) {
         let signals = self.get_mut(&hash);
