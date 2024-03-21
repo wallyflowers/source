@@ -26,22 +26,23 @@ type PresenceMap = HashMap<Hash, Vec<(Socket, Time)>>;
 type QualityMap = HashMap<Hash, Vec<Value>>;
 type KnowledgeMap = HashMap<Hash, Data>;
 
+// A trait for a memory which can commit and recall data by hash
 trait Memory {
-    fn commit(&mut self, knowledge: &Knowledge);
-    fn recall(&self, hash: Hash) -> Option<Knowledge>;
+    fn commit(&mut self, data: &Data);
+    fn recall(&self, hash: Hash) -> Option<Data>;
 }
 
-// Allow the KnowledgeMap to be used as a Memory for storing and recalling knowledge
+
 impl Memory for KnowledgeMap {
-    fn commit(&mut self, knowledge: &Knowledge) {
-        let serialized_data = bincode::serialize(knowledge).unwrap();
+    fn commit(&mut self, data: &Data) {
+        let serialized_data = bincode::serialize(data).unwrap();
         let mut hasher = Sha256::new();
         hasher.update(&serialized_data);
         let hash = hasher.finalize().into();
         self.insert(hash, serialized_data);
     }
 
-    fn recall(&self, hash: Hash) -> Option<Knowledge> {
+    fn recall(&self, hash: Hash) -> Option<Data> {
         let data = self.get(&hash);
         match data {
             Some(data) => {
@@ -52,31 +53,25 @@ impl Memory for KnowledgeMap {
     }
 }
 
-fn share_knowledge(socket: &Socket, knowledge: &Knowledge) {
-    let serialized_knowledge = bincode::serialize(knowledge).unwrap();
+fn share<T: serde::Serialize>(socket: &Socket, prefix: &[u8; 2], data: &T) {
+    let serialized_data = bincode::serialize(data).unwrap();
     let socket_address = format_socket_address(socket);
     if let Ok(mut stream) = TcpStream::connect(socket_address) {
-        stream.write_all(&[0, 0]).unwrap(); // Prefix for knowledge message
-        stream.write_all(&serialized_knowledge).unwrap();
+        stream.write_all(prefix).unwrap();
+        stream.write_all(&serialized_data).unwrap();
     }
+}
+
+fn share_knowledge(socket: &Socket, knowledge: &Knowledge) {
+    share(socket, &[0, 0], knowledge);
 }
 
 fn share_presence(socket: &Socket, presence: &Presence) {
-    let serialized_presence = bincode::serialize(presence).unwrap();
-    let socket_address = format_socket_address(socket);
-    if let Ok(mut stream) = TcpStream::connect(socket_address) {
-        stream.write_all(&[1, 0]).unwrap(); // Prefix for presence message
-        stream.write_all(&serialized_presence).unwrap();
-    }
+    share(socket, &[1, 0], presence);
 }
 
 fn share_quality(socket: &Socket, quality: &Quality) {
-    let serialized_quality = bincode::serialize(quality).unwrap();
-    let socket_address = format_socket_address(socket);
-    if let Ok(mut stream) = TcpStream::connect(socket_address) {
-        stream.write_all(&[0, 1]).unwrap(); // Prefix for quality message
-        stream.write_all(&serialized_quality).unwrap();
-    }
+    share(socket, &[0, 1], quality);
 }
 
 fn format_socket_address(socket: &Socket) -> String {
