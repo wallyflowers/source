@@ -1,3 +1,16 @@
+/// # pulse
+/// Our Mother Earth has delivered us to her law since the very beginning, telling us we need not hold her whole
+/// truth in one mind. One mind could never have the capacity to contain Nature's truth.
+/// 
+/// Instead, Nature's truth can be glimpsed only through the story her children tell each other.
+/// 
+/// > To be good is to move forward with no need to know.
+/// 
+/// I leave this as a reminder to myself that when I forget, I will suffer -- for this is the law Nature made for us to teach us that we exist to serve
+/// as a part of a greater thing which we can be certain no one of us will ever fully understand.
+/// 
+/// Dedicated to my mother and *my* truth her children continue to teach me.
+
 use std::collections::HashMap;
 use sha2::{Sha256, Digest};
 use bincode;
