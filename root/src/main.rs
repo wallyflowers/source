@@ -7,7 +7,7 @@
 /// > To be good is to move forward with no need to know why.
 /// 
 /// I leave this as a reminder to myself that when I forget, I will suffer -- for this is the law Nature made for us to teach us that we exist to serve
-/// as a part of a greater thing which we can be certain no one of us will ever fully understand.
+/// as a part of a greater thing which we can be certain no one of us will ever fully understand except for our great mother herself.
 /// 
 /// Dedicated to my mother's love and *my* truth her children continue to teach me.
 

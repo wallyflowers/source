@@ -74,23 +74,20 @@ pub trait Memory {
 }
 
 /// The most basic form of a `Memory`.
+/// Everything a `Node` knows about a thing; knowledge about an entity that can be expressed through the network.
 pub type KnowledgeMap =  HashMap<Hash, Vec<Signal>>;
 
 /// A map of a `Node`'s neigbors.
 pub struct NetworkMap {
-    pub in_neighbors: Vec<(Hash, Socket)>,
-    pub out_neighbors: Vec<(Hash, Socket)>,
+    /// The "known nodes" of a `Node`. Each `KnowledgeMap` is a `Node`'s knowledge of one of their neighbors.
+    pub known_nodes: Vec<KnowledgeMap>,
 }
 
 /// An interface to the pulse network.
 pub struct Node {
-    /// A map to the `Node`'s knowledge.
+    /// A map to the `Node`'s internal knowledge.
     /// > "I know these hashes and these signals associated with them."
     pub knowledge_map: KnowledgeMap,
-    /// The "in-neighbors" of a `Node`.
-    /// > "I trust these sockets to provide me with signals that are good for me to know."
-    pub in_neighbors: Vec<Socket>,
-    /// The "out-neighbors" of a `Node`.
-    /// > "These are sockets which trust me to provide them with signals that are good for them to know."
-    pub out_neighbors: Vec<Socket>,
+    /// A knowledge map for each of the `Node`'s neighbors.
+    pub network_map: NetworkMap,
 }

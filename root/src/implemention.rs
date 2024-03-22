@@ -2,15 +2,23 @@ use sha2::{Sha256, Digest};
 use bincode;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use crate::interface::{Node, Signal, Socket, Hash, Context, Memory, KnowledgeMap};
+use crate::interface::{Context, Hash, KnowledgeMap, Memory, NetworkMap, Node, Signal, Socket};
 
 impl Node {
-    /// Create a new `Node` with an empty `KnowledgeMap`.
+    /// Create a new `Node` with an empty `KnowledgeMap` and `NetworkMap`.
     pub fn new() -> Node {
         Node {
             knowledge_map: KnowledgeMap::new(),
-            in_neighbors: Vec::new(),
-            out_neighbors: Vec::new(),
+            network_map: NetworkMap::new(),
+        }
+    }
+}
+
+impl NetworkMap {
+    /// Create a new `NetworkMap` with an empty `known_nodes` vector.
+    pub fn new() -> NetworkMap {
+        NetworkMap {
+            known_nodes: Vec::new(),
         }
     }
 }
