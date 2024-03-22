@@ -18,8 +18,9 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use serde::{Serialize, Deserialize};
 
-/// A collection of universal types of information about a hash.
-/// They provide a way to share knowledge about a hash within a pulse network.
+/// A shared "language" of signals for contextualizing and communicating about data.
+/// 
+/// They provide a way to share knowledge about data within a pulse network without knowing the data itself.
 #[derive(Serialize, Deserialize, Clone)]
 enum Signal {
     /// The data which a hash was generated from.
@@ -44,7 +45,7 @@ enum Signal {
     Name(String),
     /// A signal that the data is a Rust source file.
     RS(Data),
-    /// A signal that the data is a pyton source file.
+    /// A signal that the data is a Python source file.
     PY(Data),
     /// A signal that the data is a markdown file.
     MD(Data),
@@ -52,29 +53,20 @@ enum Signal {
     TXT(Data),
 }
 
+// TODO: Ask the teacher to improve the documentation and proof-read the code.
+
 /// A type to represent any piece of information.
 type Data = Vec<u8>;
-/// A 48-bit TCP/IP socket.
-type Socket = [u8; 6];
+/// A 128-bit TCP/IPv6 socket address + 16-bit port number.
+/// The address part is 128 bits (16 bytes), and the port is 16 bits (2 bytes), total 18 bytes.
+type Socket = [u8; 18];
 /// A 32-bit Unix timestamp used to record the time a signal was received.
 type Time = i32;
 /// A 256-bit SHA hash representing a location in a memory.
 type Hash = [u8; 32];
 
-/// The most basic form of memory.
+/// The most basic form of a `Memory`.
 type KnowledgeMap =  HashMap<Hash, Vec<Signal>>;
-
-/// An interface to the pulse network.
-struct Node {
-    /// A map to the `Node`'s knowledge.
-    knowledge_map: KnowledgeMap,
-    /// The "in-neighbors" of a `Node`.
-    /// > "I trust these sockets to provide me with signals that are good for me to know."
-    in_neighbors: Vec<Socket>,
-    /// The "out-neighbors" of a `Node`.
-    /// > "These are sockets which trust me to provide them with signals that are good for them to know."
-    out_neighbors: Vec<Socket>,
-}
 
 /// A trait for a `Memory` which can commit and recall `Signal`'s at the corresponding hash.
 trait Memory {
@@ -113,37 +105,75 @@ impl Memory for KnowledgeMap {
     }
 }
 
+/// Types of requests a `Node` can make to its neighboring nodes.
+enum SignalType {
+    InStreamRequest(Hash, Signal),
+    InSourceRequest(Hash, Signal),
+    OutStreamRequest(Hash, Signal),
+    OutSourceRequest(Hash, Signal),
+}
 
-// TODO: make share take a stream and a vector of knowledge, send the knowledge to all the sockets in the stream
-fn share<T: serde::Serialize>(socket: &Socket, prefix: &[u8; 2], data: &T) {
-    let serialized_data = bincode::serialize(data).unwrap();
+/// A helper function to format a `Socket` as an IPv6 string.
+fn format_socket_address(socket: &Socket) -> String {
+    // Extract the IPv6 address parts
+    let addr_parts: Vec<String> = socket[0..16]
+        .chunks(2)
+        .map(|chunk| format!("{:02x}{:02x}", chunk[0], chunk[1]))
+        .collect();
+
+    // Combine the address parts into the full address string
+    let addr_str = addr_parts.join(":");
+
+    // Extract the port number
+    let port = (socket[16] as u16) << 8 | socket[17] as u16;
+
+    // Combine the IPv6 address and port
+    format!("[{}]:{}", addr_str, port)
+}
+
+/// Request a `Signal::Source` from a `Socket`.
+fn request_source(socket: &Socket, hash: &Hash) -> Option<Vec<Signal>> {
     let socket_address = format_socket_address(socket);
     if let Ok(mut stream) = TcpStream::connect(socket_address) {
-        stream.write_all(prefix).unwrap();
-        stream.write_all(&serialized_data).unwrap();
+        None // TODO implement
+    } else {
+        None
     }
 }
 
-// TODO: Remove the separate knowledge, presence, and quality sharing functions and make a single share function
-fn share_knowledge(socket: &Socket, knowledge: &Knowledge) {
-    share(socket, &[0, 0], knowledge);
+/// A helper function to share a `Signal` with a `Socket`.
+fn share(socket: &Socket, signal: &Signal) {
+    let serialized_signal = bincode::serialize(signal).unwrap();
+    let socket_address = format_socket_address(socket);
+    if let Ok(mut stream) = TcpStream::connect(socket_address) {
+        stream.write_all(&serialized_signal).unwrap();
+    }
 }
 
-fn share_presence(socket: &Socket, presence: &Presence) {
-    share(socket, &[1, 0], presence);
+/// An interface to the pulse network.
+struct Node {
+    /// A map to the `Node`'s knowledge.
+    /// > "I know these hashes and these signals associated with them."
+    knowledge_map: KnowledgeMap,
+    /// The "in-neighbors" of a `Node`.
+    /// > "I trust these sockets to provide me with signals that are good for me to know."
+    in_neighbors: Vec<Socket>,
+    /// The "out-neighbors" of a `Node`.
+    /// > "These are sockets which trust me to provide them with signals that are good for them to know."
+    out_neighbors: Vec<Socket>,
 }
 
-fn share_quality(socket: &Socket, quality: &Quality) {
-    share(socket, &[0, 1], quality);
+impl Node {
+    /// Create a new `Node` with an empty `KnowledgeMap`.
+    fn new() -> Node {
+        Node {
+            knowledge_map: KnowledgeMap::new(),
+            in_neighbors: Vec::new(),
+            out_neighbors: Vec::new(),
+        }
+    }
 }
 
-fn format_socket_address(socket: &Socket) -> String {
-    format!(
-        "{}.{}.{}.{}:{}",
-        socket[0], socket[1], socket[2], socket[3],
-        (socket[4] as u16) << 8 | socket[5] as u16
-    )
-}
 
 // TODO: make a single request stream function that takes a teacher socket and a student socket
 // Send a request to the teacher containing a tuple of the student's socket as Knowledge of type "stream_request".
